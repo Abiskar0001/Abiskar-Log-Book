@@ -14,4 +14,5 @@
 |17/11/25    |     3      | SQL Injection            | Practiced exploiting SQL injection in WHERE clause and login bypass |
 |17/11/25    |     4      | Authentication           | Explored brute-force attacks and simple 2FA bypass methods |
 |18/11/25    |     3      | Access Control & Reflection | Analyzed unprotected admin functionality and reflected on unpredictable URL risks |
+| 23.11.2025 | 4          |   Booking System project       | Going through the assignment and getting to know         |
 | 28/11/2025 | 6          |   understanding report and writing        | Finished writing report and completed phase 1 -part 1        |

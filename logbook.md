@@ -16,3 +16,5 @@
 |18/11/25    |     3      | Access Control & Reflection | Analyzed unprotected admin functionality and reflected on unpredictable URL risks |
 | 23.11.2025 | 4          |   Booking System project       | Going through the assignment and getting to know         |
 | 28/11/2025 | 6          |   understanding report and writing        | Finished writing report and completed phase 1 -part 1        |
+|01.12.2025	|2|	Intro to the booking system phase 1 -> part 2 (recorded lecture)|	Ran both phase 1 and phase 2 in docker container|
+|02.12.2025|	4	|Reporting findings and fixes to the development team	|Made a detailed report to the development regarding the new zap scan outcomes|

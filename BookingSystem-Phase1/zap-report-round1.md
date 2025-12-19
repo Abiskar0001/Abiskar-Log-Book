@@ -7,9 +7,9 @@ ZAP by [Checkmarx](https://checkmarx.com/).
 
 | Risk Level | Number of Alerts |
 | --- | --- |
-| High | 0 |
+| High | 2 |
 | Medium | 3 |
-| Low | 2 |
+| Low | 3 |
 | Informational | 0 |
 
 
@@ -19,11 +19,14 @@ ZAP by [Checkmarx](https://checkmarx.com/).
 
 | Name | Risk Level | Number of Instances |
 | --- | --- | --- |
+| Path Traversal | High | 1 |
+| SQL Injection | High | 1 |
 | Absence of Anti-CSRF Tokens | Medium | 1 |
-| Content Security Policy (CSP) Header Not Set | Medium | 2 |
-| Missing Anti-clickjacking Header | Medium | 2 |
+| Content Security Policy (CSP) Header Not Set | Medium | 3 |
+| Missing Anti-clickjacking Header | Medium | 3 |
 | Application Error Disclosure | Low | 1 |
-| X-Content-Type-Options Header Missing | Low | 5 |
+| X-Content-Type-Options Header Missing | Low | 6 |
+| ZAP is Out of Date | Low | 1 |
 
 
 
@@ -31,6 +34,124 @@ ZAP by [Checkmarx](https://checkmarx.com/).
 ## Alert Detail
 
 
+
+### [ Path Traversal ](https://www.zaproxy.org/docs/alerts/6/)
+
+
+
+##### High (Low)
+
+### Description
+
+The Path Traversal attack technique allows an attacker access to files, directories, and commands that potentially reside outside the web document root directory. An attacker may manipulate a URL in such a way that the web site will execute or reveal the contents of arbitrary files anywhere on the web server. Any device that exposes an HTTP-based interface is potentially vulnerable to Path Traversal.
+
+Most web sites restrict user access to a specific portion of the file-system, typically called the "web document root" or "CGI root" directory. These directories contain the files intended for user access and the executable necessary to drive web application functionality. To access files or execute commands anywhere on the file-system, Path Traversal attacks will utilize the ability of special-characters sequences.
+
+The most basic Path Traversal attack uses the "../" special-character sequence to alter the resource location requested in the URL. Although most popular web servers will prevent this technique from escaping the web document root, alternate encodings of the "../" sequence may help bypass the security filters. These method variations include valid and invalid Unicode-encoding ("..%u2216" or "..%c0%af") of the forward slash character, backslash characters ("..\") on Windows-based servers, URL encoded characters "%2e%2e%2f"), and double URL encoding ("..%255c") of the backslash character.
+
+Even if the web server properly restricts Path Traversal attempts in the URL path, a web application itself may still be vulnerable due to improper handling of user-supplied input. This is a common problem of web applications that use template mechanisms or load static text from files. In variations of the attack, the original URL parameter value is substituted with the file name of one of the web application's dynamic scripts. Consequently, the results can reveal source code because the file is interpreted as text instead of an executable script. These techniques often employ additional special characters such as the dot (".") to reveal the listing of the current working directory, or "%00" NULL characters in order to bypass rudimentary file extension checks.
+
+* URL: http://localhost:8000/register
+
+  * Method: `POST`
+  * Parameter: `username`
+  * Attack: `register`
+  * Evidence: ``
+  * Other Info: ``
+
+
+Instances: 1
+
+### Solution
+
+Assume all input is malicious. Use an "accept known good" input validation strategy, i.e., use an allow list of acceptable inputs that strictly conform to specifications. Reject any input that does not strictly conform to specifications, or transform it into something that does. Do not rely exclusively on looking for malicious or malformed inputs (i.e., do not rely on a deny list). However, deny lists can be useful for detecting potential attacks or determining which inputs are so malformed that they should be rejected outright.
+
+When performing input validation, consider all potentially relevant properties, including length, type of input, the full range of acceptable values, missing or extra inputs, syntax, consistency across related fields, and conformance to business rules. As an example of business rule logic, "boat" may be syntactically valid because it only contains alphanumeric characters, but it is not valid if you are expecting colors such as "red" or "blue."
+
+For filenames, use stringent allow lists that limit the character set to be used. If feasible, only allow a single "." character in the filename to avoid weaknesses, and exclude directory separators such as "/". Use an allow list of allowable file extensions.
+
+Warning: if you attempt to cleanse your data, then do so that the end result is not in the form that can be dangerous. A sanitizing mechanism can remove characters such as '.' and ';' which may be required for some exploits. An attacker can try to fool the sanitizing mechanism into "cleaning" data into a dangerous form. Suppose the attacker injects a '.' inside a filename (e.g. "sensi.tiveFile") and the sanitizing mechanism removes the character resulting in the valid filename, "sensitiveFile". If the input data are now assumed to be safe, then the file may be compromised. 
+
+Inputs should be decoded and canonicalized to the application's current internal representation before being validated. Make sure that your application does not decode the same input twice. Such errors could be used to bypass allow list schemes by introducing dangerous inputs after they have been checked.
+
+Use a built-in path canonicalization function (such as realpath() in C) that produces the canonical version of the pathname, which effectively removes ".." sequences and symbolic links.
+
+Run your code using the lowest privileges that are required to accomplish the necessary tasks. If possible, create isolated accounts with limited privileges that are only used for a single task. That way, a successful attack will not immediately give the attacker access to the rest of the software or its environment. For example, database applications rarely need to run as the database administrator, especially in day-to-day operations.
+
+When the set of acceptable objects, such as filenames or URLs, is limited or known, create a mapping from a set of fixed input values (such as numeric IDs) to the actual filenames or URLs, and reject all other inputs.
+
+Run your code in a "jail" or similar sandbox environment that enforces strict boundaries between the process and the operating system. This may effectively restrict which files can be accessed in a particular directory or which commands can be executed by your software.
+
+OS-level examples include the Unix chroot jail, AppArmor, and SELinux. In general, managed code may provide some protection. For example, java.io.FilePermission in the Java SecurityManager allows you to specify restrictions on file operations.
+
+This may not be a feasible solution, and it only limits the impact to the operating system; the rest of your application may still be subject to compromise.
+
+
+### Reference
+
+
+* [ https://owasp.org/www-community/attacks/Path_Traversal ](https://owasp.org/www-community/attacks/Path_Traversal)
+* [ https://cwe.mitre.org/data/definitions/22.html ](https://cwe.mitre.org/data/definitions/22.html)
+
+
+#### CWE Id: [ 22 ](https://cwe.mitre.org/data/definitions/22.html)
+
+
+#### WASC Id: 33
+
+#### Source ID: 1
+
+### [ SQL Injection ](https://www.zaproxy.org/docs/alerts/40018/)
+
+
+
+##### High (Medium)
+
+### Description
+
+SQL injection may be possible.
+
+* URL: http://localhost:8000/register
+
+  * Method: `POST`
+  * Parameter: `username`
+  * Attack: `foo-bar@example.com AND 1=1 -- `
+  * Evidence: ``
+  * Other Info: `The page results were successfully manipulated using the boolean conditions [foo-bar@example.com AND 1=1 -- ] and [foo-bar@example.com AND 1=2 -- ]
+The parameter value being modified was stripped from the HTML output for the purposes of the comparison.
+Data was returned for the original parameter.
+The vulnerability was detected by successfully restricting the data originally returned, by manipulating the parameter.`
+
+
+Instances: 1
+
+### Solution
+
+Do not trust client side input, even if there is client side validation in place.
+In general, type check all data on the server side.
+If the application uses JDBC, use PreparedStatement or CallableStatement, with parameters passed by '?'
+If the application uses ASP, use ADO Command Objects with strong type checking and parameterized queries.
+If database Stored Procedures can be used, use them.
+Do *not* concatenate strings into queries in the stored procedure, or use 'exec', 'exec immediate', or equivalent functionality!
+Do not create dynamic SQL queries using simple string concatenation.
+Escape all data received from the client.
+Apply an 'allow list' of allowed characters, or a 'deny list' of disallowed characters in user input.
+Apply the principle of least privilege by using the least privileged database user possible.
+In particular, avoid using the 'sa' or 'db-owner' database users. This does not eliminate SQL injection, but minimizes its impact.
+Grant the minimum database access that is necessary for the application.
+
+### Reference
+
+
+* [ https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html ](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
+
+
+#### CWE Id: [ 89 ](https://cwe.mitre.org/data/definitions/89.html)
+
+
+#### WASC Id: 19
+
+#### Source ID: 1
 
 ### [ Absence of Anti-CSRF Tokens ](https://www.zaproxy.org/docs/alerts/10202/)
 
@@ -109,6 +230,13 @@ Check the HTTP Referer header to see if the request originated from an expected 
 
 Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.
 
+* URL: http://localhost:8000
+
+  * Method: `GET`
+  * Parameter: ``
+  * Attack: ``
+  * Evidence: ``
+  * Other Info: ``
 * URL: http://localhost:8000/
 
   * Method: `GET`
@@ -125,7 +253,7 @@ Content Security Policy (CSP) is an added layer of security that helps to detect
   * Other Info: ``
 
 
-Instances: 2
+Instances: 3
 
 ### Solution
 
@@ -160,6 +288,13 @@ Ensure that your web server, application server, load balancer, etc. is configur
 
 The response does not protect against 'ClickJacking' attacks. It should include either Content-Security-Policy with 'frame-ancestors' directive or X-Frame-Options.
 
+* URL: http://localhost:8000
+
+  * Method: `GET`
+  * Parameter: `x-frame-options`
+  * Attack: ``
+  * Evidence: ``
+  * Other Info: ``
 * URL: http://localhost:8000/
 
   * Method: `GET`
@@ -176,7 +311,7 @@ The response does not protect against 'ClickJacking' attacks. It should include 
   * Other Info: ``
 
 
-Instances: 2
+Instances: 3
 
 ### Solution
 
@@ -242,6 +377,14 @@ Review the source code of this page. Implement custom error pages. Consider impl
 
 The Anti-MIME-Sniffing header X-Content-Type-Options was not set to 'nosniff'. This allows older versions of Internet Explorer and Chrome to perform MIME-sniffing on the response body, potentially causing the response body to be interpreted and displayed as a content type other than the declared content type. Current (early 2014) and legacy versions of Firefox will use the declared content type (if one is set), rather than performing MIME-sniffing.
 
+* URL: http://localhost:8000
+
+  * Method: `GET`
+  * Parameter: `x-content-type-options`
+  * Attack: ``
+  * Evidence: ``
+  * Other Info: `This issue still applies to error type pages (401, 403, 500, etc.) as those pages are often still affected by injection issues, in which case there is still concern for browsers sniffing pages away from their actual content type.
+At "High" threshold this scan rule will not alert on client or server error responses.`
 * URL: http://localhost:8000/
 
   * Method: `GET`
@@ -284,7 +427,7 @@ At "High" threshold this scan rule will not alert on client or server error resp
 At "High" threshold this scan rule will not alert on client or server error responses.`
 
 
-Instances: 5
+Instances: 6
 
 ### Solution
 
@@ -302,6 +445,45 @@ If possible, ensure that the end user uses a standards-compliant and modern web 
 
 
 #### WASC Id: 15
+
+#### Source ID: 3
+
+### [ ZAP is Out of Date ](https://www.zaproxy.org/docs/alerts/10116/)
+
+
+
+##### Low (High)
+
+### Description
+
+The version of ZAP you are using to test your app is out of date and is no longer being updated.
+The risk level is set based on how out of date your ZAP version is.
+
+* URL: http://localhost:8000/register
+
+  * Method: `POST`
+  * Parameter: ``
+  * Attack: ``
+  * Evidence: ``
+  * Other Info: `The latest version of ZAP is 2.17.0`
+
+
+Instances: 1
+
+### Solution
+
+Download the latest version of ZAP from https://www.zaproxy.org/download/ and install it.
+
+### Reference
+
+
+* [ https://www.zaproxy.org/download/ ](https://www.zaproxy.org/download/)
+
+
+#### CWE Id: [ 1104 ](https://cwe.mitre.org/data/definitions/1104.html)
+
+
+#### WASC Id: 45
 
 #### Source ID: 3
 

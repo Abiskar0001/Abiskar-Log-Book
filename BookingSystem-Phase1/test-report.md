@@ -4,23 +4,17 @@
 - Name:  Abiskar Sapkota, Raman Moktan
 
 **Purpose:**  
-- To identify vulnerabilities and anomalies in the user registration functionality of the booking system.
+- Identify security vulnerabilities in the registration and authentication flows of the Booking System web application.
 
 **Scope:**  
-- Tested components: Registration page (client-side behavior, server response, session handling, input validation)
-- Exclusions:  Login, admin features
-- Test approach: Gray-box 
+- Tested components: Registration page (/register), root (/), static files served from /static/*   
+- Exclusions: Admin endpoints, API endpoints beyond registration
+- Test approach: Black-box (local Docker environment)
 
 **Test environment & dates:**  
-- Start:  2025-11-28
-- End:  2025-11-28
-- Test environment details :
-    - OS: Windows 11
-    - Runtime: Docker Desktop
-    - Database: PostgreSQL (via Docker container)
-    - Browser: Firefox 
-    - Tools: OWASP ZAP, PostgreSQL CLI, browser dev tools
-
+- Start:  2025-12-03
+- End:  2025-12-03
+- Test environment details (OS, runtime, DB, browsers): Docker local environment, Browser: Firefox, Server: localhost:8000, Tool: OWASP ZAP
 
 **Assumptions & constraints:**  
 - Testing performed only on the local Docker instance.
@@ -30,17 +24,16 @@
 # 2️⃣ Executive Summary
 
 **Short summary (1-2 sentences):**  
-Manual and automated testing of the registration form revealed several medium and low severity issues, including missing CSRF protection, lack of security headers, and improper error handling. No critical vulnerabilities (e.g., SQL injection) were confirmed.
+Automated ZAP scan identified two high-risk vulnerabilities (SQL Injection, Path Traversal), several medium-risk issues (missing CSRF tokens, CSP missing, format string error), and low-risk misconfigurations (missing security headers). Immediate remediation is recommended before deployment.
 
-
-**Overall risk level:** Medium
+**Overall risk level:** High
 
 **Top 5 immediate actions:**  
-1.  Implement Anti-CSRF tokens for forms.
-2.  Add Content-Security-Policy header.
-3.  Add X-Frame-Options / CSP frame-ancestors.
-4.  Hide server error details; implement custom error pages.
-5.  Add X-Content-Type-Options: nosniff
+1.  Fix SQL Injection vulnerability in /register.
+2.  Fix Path Traversal vulnerability in username input handling.
+3.  Implement Anti-CSRF tokens in forms.
+4.  Add security headers: CSP, X-Frame-Options, X-Content-Type-Options.
+5.  Implement custom error pages to prevent application error disclosure.
 
 ---
 
@@ -61,11 +54,11 @@ Manual and automated testing of the registration form revealed several medium an
 
 | ID | Severity | Finding | Description | Evidence / Proof |
 |------|-----------|----------|--------------|------------------|
-| F-01 | 🟠 Medium | Absence of Anti-CSRF Tokens | No CSRF token on registration form | ZAP evidence: `<form action="/register">` |
-| F-02 | 🟠 Medium | CSP Header Missing | CSP not present on / and /register  | ZAP alert |
-| F-03 | 🟠 Medium | Missing Anti-clickjacking Header | No X-Frame-Options or frame-ancestors | ZAP alert |
-| F-04 | 🟡 Low | Application Error Disclosure | 500 error observed on POST /register | ZAP evidence |
-| F-05 | 🟡 Low | X-Content-Type-Options Missing |  `X-Content-Type-Options` not set | ZAP alert |
+| F-01 | 🔴 High | SQL Injection in registration | Input field username allows injection, returning HTTP 500 | ZAP evidence: POST /register with ' triggers error |
+| F-02 | 🔴 High | Path Traversal in registration | username input could allow access outside web root  | ZAP evidence: POST /register parameter username |
+| F-03 | 🟠 Medium | Absence of Anti-CSRF Tokens | Registration form lacks CSRF protection | <form action="/register" method="POST"> |
+| F-04 | 🟠 Medium |Missing CSP Header | No Content-Security-Policy header on / and /register | ZAP alert |
+| F-05 | 🟡 Low | X-Content-Type-Options Missing |  Header nosniff missing on multiple endpoints | ZAP alert |
 
 ---
 
@@ -79,7 +72,6 @@ Manual and automated testing of the registration form revealed several medium an
 The full scan results are included as a separate Markdown file.
 
 ---
-
 
 ### 📎 ZAP Report (Markdown)
  **[Click here to view the full ZAP report](./zap-report.md)**

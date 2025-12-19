@@ -12,8 +12,8 @@
 - Test approach: Black-box (local Docker environment)
 
 **Test environment & dates:**  
-- Start:  2025-12-03
-- End:  2025-12-03
+- Start:  2025-12-19
+- End:  2025-12-19
 - Test environment details (OS, runtime, DB, browsers): Docker local environment, Browser: Firefox, Server: localhost:8000, Tool: OWASP ZAP
 
 **Assumptions & constraints:**  
